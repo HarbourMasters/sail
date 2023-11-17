@@ -1,0 +1,68 @@
+{
+  "channel": "proxysaw",
+  "commands": {
+    "!rave": {
+      "cooldownSeconds": 300,
+      "lengthSeconds": 20,
+      "effects": [
+        {
+          "type": "console",
+          "command": "set gCosmetics.Link_KokiriTunic.Changed 1"
+        },
+        {
+          "type": "console",
+          "command": "set gCosmetics.Link_KokiriTunic.Rainbow 1"
+        }
+      ],
+      "endEffects": [
+        {
+          "type": "console",
+          "command": "set gCosmetics.Link_KokiriTunic.Changed 0"
+        },
+        {
+          "type": "console",
+          "command": "set gCosmetics.Link_KokiriTunic.Rainbow 0"
+        }
+      ]
+    },
+    "!tiny": {
+      "cooldownSeconds": 300,
+      "lengthSeconds": 10,
+      "effects": [
+        {
+          "type": "apply",
+          "name": "modify_link_size",
+          "parameters": [
+            2
+          ]
+        }
+      ],
+      "endEffects": [
+        {
+          "type": "remove",
+          "name": "modify_link_size"
+        }
+      ]
+    },
+    "!kick": {
+      "cooldownSeconds": 300,
+      "effects": [
+        {
+          "type": "apply",
+          "name": "knockback_player",
+          "parameters": [
+            "{{0}}"
+          ]
+        }
+      ]
+    },
+    "878f54ca-b3ec-4acd-acc1-c5482b5c2f8e": {
+      "effects": [
+        {
+          "type": "console",
+          "command": "reset"
+        }
+      ]
+    }
+  }
+}
