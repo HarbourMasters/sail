@@ -1,0 +1,32 @@
+name: compile
+on:
+  push:
+  pull_request:
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Compile
+      run: |
+        deno compile --target aarch64-apple-darwin --allow-net --allow-read -o build/sail-mac-aarch64 json_sail.ts
+        deno compile --target x86_64-apple-darwin --allow-net --allow-read -o build/sail-mac-x86_64 json_sail.ts
+        deno compile --target x86_64-pc-windows-msvc --allow-net --allow-read -o build/sail-windows-x86_64.exe json_sail.ts
+        deno compile --target x86_64-unknown-linux-gnu --allow-net --allow-read -o build/sail-linux-x86_64 json_sail.ts
+    - name: Upload macOS aarch64
+      uses: actions/upload-artifact@v3
+      with:
+        path: build/sail-mac-aarch64
+    - name: Upload macOS x86_64
+      uses: actions/upload-artifact@v3
+      with:
+        path: build/sail-mac-x86_64
+    - name: Upload Windows x86_64
+      uses: actions/upload-artifact@v3
+      with:
+        path: build/sail-windows-x86_64.exe
+    - name: Upload Linux x86_64
+      uses: actions/upload-artifact@v3
+      with:
+        path: build/sail-linux-x86_64
+ 
