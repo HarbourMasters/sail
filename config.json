@@ -31,7 +31,7 @@
       "effects": [
         {
           "type": "apply",
-          "name": "modify_link_size",
+          "name": "ModifyLinkSize",
           "parameters": [
             2
           ]
@@ -40,7 +40,7 @@
       "endEffects": [
         {
           "type": "remove",
-          "name": "modify_link_size"
+          "name": "ModifyLinkSize"
         }
       ]
     },
@@ -49,7 +49,7 @@
       "effects": [
         {
           "type": "apply",
-          "name": "knockback_player",
+          "name": "KnockbackPlayer",
           "parameters": [
             "{{0}}"
           ]

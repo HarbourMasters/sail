@@ -18,7 +18,6 @@ export class Sail extends EventEmitter<{
     this.server.start();
     await new Promise<void>((resolve) => {
       this.ircClient.on("open", async () => {
-        console.log("Connected to Twitch IRC ${channel}");
         await this.ircClient.join(`#${channel}`);
         this.log(`Connected to chat for ${channel}`);
         resolve();
@@ -78,7 +77,7 @@ export class Sail extends EventEmitter<{
       id: nanoid(),
       effect: {
         type: "apply",
-        name: "knockback_player",
+        name: "KnockbackPlayer",
         parameters: [strength],
       },
     });
@@ -89,7 +88,7 @@ export class Sail extends EventEmitter<{
       id: nanoid(),
       effect: {
         type: "apply",
-        name: "modify_link_size",
+        name: "ModifyLinkSize",
         parameters: [size],
       },
     });
@@ -99,7 +98,7 @@ export class Sail extends EventEmitter<{
         id: nanoid(),
         effect: {
           type: "remove",
-          name: "modify_link_size",
+          name: "ModifyLinkSize",
         },
       });
     }, 1000 * lengthSeconds);

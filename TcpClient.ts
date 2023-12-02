@@ -64,11 +64,9 @@ export class TcpClient {
 
   async processQueue() {
     if (this.packetQueue.length && !this.waitingOnResponse) {
-      console.log("processing");
       const command = this.packetQueue.shift()!;
       this.packetQueue.push(command);
       this.waitingOnResponse = true;
-      this.log("Sending: " + command.id);
       await this.sendPacket(command);
     }
 
@@ -84,9 +82,12 @@ export class TcpClient {
 
       this.log(`-> ${packetObject.id} packet`);
 
-      this.packetQueue = this.packetQueue.filter(
-        (payload) => payload.id !== packetObject.id,
-      );
+      if (packetObject.status == "success" || packetObject.status == "error") {
+        this.packetQueue = this.packetQueue.filter(
+          (payload) => payload.id !== packetObject.id,
+        );
+      }
+
       this.waitingOnResponse = false;
     } catch (error) {
       this.log(`Error handling packet: ${error.message}`);
