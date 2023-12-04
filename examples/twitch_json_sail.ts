@@ -1,8 +1,8 @@
 import Template from "https://deno.land/x/template@v0.1.0/mod.ts";
 import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/mod.ts";
-import { Effect, Packet } from "./types.ts";
-import { Sail } from "./Sail.ts";
-import { TwitchClient } from "./TwitchClient.ts";
+import { Effect, OutgoingPacket } from "../types.ts";
+import { Sail } from "../Sail.ts";
+import { TwitchClient } from "../TwitchClient.ts";
 
 let config: {
   channel: string;
@@ -83,7 +83,7 @@ twitchClient.on("raw", (event) => {
   }
 });
 
-function preparePackets(effects: Effect[], argObject: any): Packet[] {
+function preparePackets(effects: Effect[], argObject: any): OutgoingPacket[] {
   return effects.map((effect) => {
     switch (effect.type) {
       case "apply":

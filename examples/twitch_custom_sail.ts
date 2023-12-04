@@ -1,19 +1,19 @@
-import { Sail } from "./Sail.ts";
-import { TwitchClient } from "./TwitchClient.ts";
+import { Sail } from "../Sail.ts";
+import { TwitchClient } from "../TwitchClient.ts";
 
 const sail = new Sail();
 const twitchClient = new TwitchClient();
 
 twitchClient.on("chat", (message, user) => {
   if (message.match(/!kick (\d+)/)) {
-    if (onCooldown("kick", 1)) return;
+    if (onCooldown("kick", 300)) return;
     const strengthStr = message.match(/!kick (\d+)/)![1];
     const strength = Math.max(1, Math.min(3, parseInt(strengthStr)));
     sail.knockbackPlayer(strength);
   }
 
   if (message.match(/!rave/)) {
-    if (onCooldown("rave", 1)) return;
+    if (onCooldown("rave", 300)) return;
     sail.command("set gCosmetics.Link_KokiriTunic.Changed 1");
     sail.command("set gCosmetics.Link_KokiriTunic.Rainbow 1");
 
@@ -24,7 +24,7 @@ twitchClient.on("chat", (message, user) => {
   }
 
   if (message.match(/!tiny/)) {
-    if (onCooldown("tiny", 1)) return;
+    if (onCooldown("tiny", 300)) return;
     sail.modifyLinkSize(2, 10);
   }
 });

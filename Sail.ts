@@ -1,6 +1,6 @@
 import EventEmitter from "https://deno.land/x/eventemitter@1.2.4/mod.ts";
 import { TcpServer } from "./TcpServer.ts";
-import { Packet } from "./types.ts";
+import { OutgoingPacket } from "./types.ts";
 import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/nanoid.ts";
 
 export class Sail extends EventEmitter {
@@ -11,7 +11,7 @@ export class Sail extends EventEmitter {
     this.log(`Sail has been lifted!`);
   }
 
-  queuePackets(packets: Packet[] | Packet) {
+  queuePackets(packets: OutgoingPacket[] | OutgoingPacket) {
     this.server.queuePackets(packets);
   }
 
@@ -25,11 +25,8 @@ export class Sail extends EventEmitter {
   command(command: string) {
     this.queuePackets({
       id: nanoid(),
-      type: "effect",
-      effect: {
-        type: "command",
-        command: command,
-      },
+      type: "command",
+      command: command,
     });
   }
 

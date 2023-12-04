@@ -21,13 +21,13 @@ deno run --allow-net --allow-read twitch_json_sail.ts
 Out of the box both types are configured with the same commands/rewards,
 primarily to show you an example of how to configure each type.
 
-### JSON Sail
+### Twitch JSON Sail
 
 The JSON sail is configuration driven by a JSON file, while it is easier to
 configure and get running, it is less flexible than the custom sail. I'd start
 here until you need to do something that the JSON sail doesn't support.
 
-### Custom Sail
+### Twitch Custom Sail
 
 The custom sail is a TypeScript file that is compiled and run by Deno. It is
 more flexible than the JSON sail, but requires a bit more knowledge of
