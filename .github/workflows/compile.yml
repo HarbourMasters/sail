@@ -17,24 +17,29 @@ jobs:
         deno compile --target x86_64-pc-windows-msvc --allow-net --allow-read -o build/twitch-json-sail-windows-x86_64.exe examples/twitch_json_sail.ts
         deno compile --target x86_64-unknown-linux-gnu --allow-net --allow-read -o build/twitch-json-sail-linux-x86_64 examples/twitch_json_sail.ts
         deno compile --target x86_64-pc-windows-msvc --allow-net --allow-read -o build/sammi-sail-windows-x86_64.exe examples/sammi_sail.ts
-    - name: Upload macOS aarch64
+    - name: Upload twitch-json-sail macOS aarch64
       uses: actions/upload-artifact@v3
       with:
-        name: sail-mac-aarch64
-        path: build/sail-mac-aarch64
-    - name: Upload macOS x86_64
+        name: twitch-json-sail-mac-aarch64
+        path: build/twitch-json-sail-mac-aarch64
+    - name: Upload twitch-json-sail macOS x86_64
       uses: actions/upload-artifact@v3
       with:
-        name: sail-mac-x86_64
-        path: build/sail-mac-x86_64
-    - name: Upload Windows x86_64
+        name: twitch-json-sail-mac-x86_64
+        path: build/twitch-json-sail-mac-x86_64
+    - name: Upload twitch-json-sail Windows x86_64
       uses: actions/upload-artifact@v3
       with:
-        name: sail-windows-x86_64.exe
-        path: build/sail-windows-x86_64.exe
-    - name: Upload Linux x86_64
+        name: twitch-json-sail-windows-x86_64.exe
+        path: build/twitch-json-sail-windows-x86_64.exe
+    - name: Upload sammi-sail Windows x86_64
       uses: actions/upload-artifact@v3
       with:
-        name: sail-linux-x86_64
-        path: build/sail-linux-x86_64
+        name: sammi-sail-windows-x86_64.exe
+        path: build/sammi-sail-windows-x86_64.exe
+    - name: Upload twitch-json-sail Linux x86_64
+      uses: actions/upload-artifact@v3
+      with:
+        name: twitch-json-sail-linux-x86_64
+        path: build/twitch-json-sail-linux-x86_64
  
