@@ -32,3 +32,10 @@ here until you need to do something that the JSON sail doesn't support.
 The custom sail is a TypeScript file that is compiled and run by Deno. It is
 more flexible than the JSON sail, but requires a bit more knowledge of
 programming to configure to your liking. Your limit is your imagination here.
+
+### SAMMI Sail
+
+The SAMMI sail is meant to be used with the SAMMI bot, it simply redirects
+traffic between your SAMMI bot and SoH. You can configure the sail with env
+variables to point to your SAMMI's webhook endpoint with SAMMI_WEBHOOK_URL and
+have SAMMI point to the Sail's endpoint at http://localhost:43383
