@@ -1,5 +1,6 @@
 import { Sail } from "../Sail.ts";
 import { SohClient } from "../SohClient.ts";
+import { Hook } from "../types.ts";
 
 let port = 43384;
 if (Deno.env.has("PORT")) {
@@ -28,6 +29,8 @@ const sammiUrl = Deno.env.has("SAMMI_WEBHOOK_URL")
 const sail = new Sail({ port, debug: true });
 let sohClient: SohClient | undefined;
 
+const hookQueue: Hook[] = [];
+
 sail.on("clientConnected", (client) => {
   sohClient = client;
 
@@ -35,10 +38,17 @@ sail.on("clientConnected", (client) => {
     sohClient = undefined;
   });
 
-  client.on("anyHook", async (event) => {
-    const { type, ...rest } = event;
+  client.on("anyHook", (event) => {
+    hookQueue.push(event);
+  });
+});
 
-    try {
+(async function processHookQueue() {
+  try {
+    if (hookQueue.length > 0) {
+      const event = hookQueue.shift()!;
+      const { type, ...rest } = event;
+
       await fetch(sammiUrl, {
         method: "POST",
         headers: {
@@ -49,11 +59,13 @@ sail.on("clientConnected", (client) => {
           ...rest,
         }),
       });
-    } catch (error) {
-      console.error("Error sending webhook to SAMMI", error);
     }
-  });
-});
+  } catch (error) {
+    console.error("There was an error sending a hook to Sammi", error);
+  } finally {
+    setTimeout(processHookQueue, 0);
+  }
+})();
 
 async function handler(request: Request): Promise<Response> {
   if (!request.body) {
