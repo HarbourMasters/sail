@@ -62,11 +62,12 @@ export class Sail extends EventEmitter<{
 
   /* Effect helpers */
 
-  console(command: string) {
+  command(command: string) {
     this.queuePackets({
       id: nanoid(),
+      type: "effect",
       effect: {
-        type: "console",
+        type: "command",
         command: command,
       },
     });
@@ -75,6 +76,7 @@ export class Sail extends EventEmitter<{
   knockbackPlayer(strength: number) {
     this.queuePackets({
       id: nanoid(),
+      type: "effect",
       effect: {
         type: "apply",
         name: "KnockbackPlayer",
@@ -86,6 +88,7 @@ export class Sail extends EventEmitter<{
   modifyLinkSize(size: number, lengthSeconds: number) {
     this.queuePackets({
       id: nanoid(),
+      type: "effect",
       effect: {
         type: "apply",
         name: "ModifyLinkSize",
@@ -96,6 +99,7 @@ export class Sail extends EventEmitter<{
     setTimeout(() => {
       this.queuePackets({
         id: nanoid(),
+        type: "effect",
         effect: {
           type: "remove",
           name: "ModifyLinkSize",

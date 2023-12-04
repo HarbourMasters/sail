@@ -96,7 +96,7 @@ function preparePackets(effects: Effect[], argObject: any): Packet[] {
           }),
         };
         break;
-      case "console":
+      case "command":
         effect = {
           ...effect,
           command: tpl.render(effect.command, argObject),
@@ -107,6 +107,7 @@ function preparePackets(effects: Effect[], argObject: any): Packet[] {
 
     return {
       id: nanoid(),
+      type: "effect",
       effect,
     };
   });

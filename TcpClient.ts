@@ -1,6 +1,6 @@
 import { writeAll } from "https://deno.land/std@0.192.0/streams/write_all.ts";
 import { TcpServer } from "./TcpServer.ts";
-import { Packet } from "./types.ts";
+import { Packet, ResultPacket } from "./types.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -78,11 +78,13 @@ export class TcpClient {
   handlePacket(packet: Uint8Array) {
     try {
       const packetString = decoder.decode(packet);
-      const packetObject: Packet = JSON.parse(packetString);
+      const packetObject: ResultPacket = JSON.parse(packetString);
 
-      this.log(`-> ${packetObject.id} packet`);
+      this.log("->", packetObject);
 
-      if (packetObject.status == "success" || packetObject.status == "error") {
+      if (
+        packetObject.status == "success" || packetObject.status == "failure"
+      ) {
         this.packetQueue = this.packetQueue.filter(
           (payload) => payload.id !== packetObject.id,
         );
@@ -96,7 +98,7 @@ export class TcpClient {
 
   async sendPacket(packetObject: Packet) {
     try {
-      this.log(`<- ${packetObject.id} packet`);
+      this.log("<-", packetObject);
       const packetString = JSON.stringify(packetObject);
       const packet = encoder.encode(packetString + "\0");
 

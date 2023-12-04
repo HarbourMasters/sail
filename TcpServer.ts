@@ -1,3 +1,4 @@
+import "https://deno.land/std@0.208.0/dotenv/load.ts";
 import { TcpClient } from "./TcpClient.ts";
 import { Packet } from "./types.ts";
 
@@ -6,20 +7,27 @@ export class TcpServer {
   public clients: TcpClient[] = [];
 
   async start() {
-    this.listener = Deno.listen({ port: 43384 });
-
-    this.log("Server listening on port 43384");
     try {
+      const port = Deno.env.has("PORT")
+        ? parseInt(Deno.env.get("PORT")!, 10)
+        : 43384;
+      if (isNaN(port)) {
+        throw new Error("Invalid PORT environment variable");
+      }
+
+      this.listener = Deno.listen({ port: port });
+
+      this.log(`Server listening on port ${port}`);
       for await (const connection of this.listener) {
         try {
           const client = new TcpClient(connection, this);
           this.clients.push(client);
         } catch (error) {
-          this.log(`Error connecting client: ${error.message}`);
+          this.log("Error connecting client:", error);
         }
       }
     } catch (error) {
-      this.log(`Error starting server: ${error.message}`);
+      this.log("Error starting server:", error);
     }
   }
 

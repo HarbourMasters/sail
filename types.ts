@@ -1,5 +1,5 @@
-export interface ConsoleEffect {
-  type: "console";
+export interface CommandEffect {
+  type: "command";
   command: string;
 }
 
@@ -14,10 +14,92 @@ export interface RemoveEffect {
   name: string;
 }
 
-export type Effect = ConsoleEffect | ApplyEffect | RemoveEffect;
+export type Effect = CommandEffect | ApplyEffect | RemoveEffect;
 
-export interface Packet {
+export interface EffectPacket {
   id: string;
+  type: "effect";
   effect: Effect;
-  status?: "success" | "error" | "try_again";
 }
+
+export interface ResultPacket {
+  id: string;
+  status: "success" | "failure" | "try_again";
+}
+
+interface OnTransitionEndHook {
+  type: "OnTransitionEnd";
+  sceneNum: number;
+}
+
+interface OnLoadGameHook {
+  type: "OnLoadGame";
+  fileNum: number;
+}
+
+interface OnExitGameHook {
+  type: "OnExitGame";
+  fileNum: number;
+}
+
+interface OnItemReceiveHook {
+  type: "OnItemReceive";
+  tableId: number;
+  getItemId: number;
+}
+
+interface OnEnemyDefeatHook {
+  type: "OnEnemyDefeat";
+  actorId: number;
+  params: number;
+}
+
+interface OnActorInitHook {
+  type: "OnActorInit";
+  actorId: number;
+  params: number;
+}
+
+interface OnFlagSetHook {
+  type: "OnFlagSet";
+  flagType: number;
+  flag: number;
+}
+
+interface OnFlagUnsetHook {
+  type: "OnFlagUnset";
+  flagType: number;
+  flag: number;
+}
+
+interface OnSceneFlagSetHook {
+  type: "OnSceneFlagSet";
+  flagType: number;
+  flag: number;
+  sceneNum: number;
+}
+
+interface OnSceneFlagUnsetHook {
+  type: "OnSceneFlagUnset";
+  flagType: number;
+  flag: number;
+  sceneNum: number;
+}
+
+export interface HookPacket {
+  id: string;
+  type: "hook";
+  hook:
+    | OnTransitionEndHook
+    | OnLoadGameHook
+    | OnExitGameHook
+    | OnItemReceiveHook
+    | OnEnemyDefeatHook
+    | OnActorInitHook
+    | OnFlagSetHook
+    | OnFlagUnsetHook
+    | OnSceneFlagSetHook
+    | OnSceneFlagUnsetHook;
+}
+
+export type Packet = EffectPacket | ResultPacket | HookPacket;

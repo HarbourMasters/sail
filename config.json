@@ -6,21 +6,21 @@
       "lengthSeconds": 20,
       "effects": [
         {
-          "type": "console",
+          "type": "command",
           "command": "set gCosmetics.Link_KokiriTunic.Changed 1"
         },
         {
-          "type": "console",
+          "type": "command",
           "command": "set gCosmetics.Link_KokiriTunic.Rainbow 1"
         }
       ],
       "endEffects": [
         {
-          "type": "console",
+          "type": "command",
           "command": "set gCosmetics.Link_KokiriTunic.Changed 0"
         },
         {
-          "type": "console",
+          "type": "command",
           "command": "set gCosmetics.Link_KokiriTunic.Rainbow 0"
         }
       ]
@@ -59,7 +59,7 @@
     "878f54ca-b3ec-4acd-acc1-c5482b5c2f8e": {
       "effects": [
         {
-          "type": "console",
+          "type": "command",
           "command": "reset"
         }
       ]
