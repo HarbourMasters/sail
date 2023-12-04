@@ -9,17 +9,25 @@ export class TwitchClient extends EventEmitter<{
   raw: (raw: Privmsg) => void;
 }> {
   public ircClient = new TwitchIrc.Client();
+  public channel: string;
+  public debug = false;
 
-  constructor() {
+  constructor({ channel, debug }: { channel: string; debug?: boolean }) {
     super();
+
+    if (debug) {
+      this.debug = debug;
+    }
+
+    this.channel = channel;
     this.ircClient.on("privmsg", (e) => this.handleMessage(e));
   }
 
-  async connect(channel: string) {
+  async connect() {
     await new Promise<void>((resolve) => {
       this.ircClient.on("open", async () => {
-        await this.ircClient.join(`#${channel}`);
-        this.log(`Connected to chat for ${channel}`);
+        await this.ircClient.join(`#${this.channel}`);
+        this.log(`Connected to chat for ${this.channel}`);
         resolve();
       });
     });
@@ -27,6 +35,8 @@ export class TwitchClient extends EventEmitter<{
 
   handleMessage(event: Privmsg) {
     this.emit("raw", event);
+    if (this.debug) this.log("Raw:", event.raw);
+
     if (event.raw.tags?.customRewardId) {
       this.log("Redeem Used:", event.raw.tags?.customRewardId);
       this.emit(

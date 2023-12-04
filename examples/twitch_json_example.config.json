@@ -1,5 +1,6 @@
 {
-  "channel": "proxysaw",
+  "port": 43384,
+  "channel": "your_channel_name_lowercase",
   "commands": {
     "!rave": {
       "cooldownSeconds": 300,

@@ -28,85 +28,89 @@ export interface CommandPacket {
   command: string;
 }
 
+export type ResultStatus = "success" | "failure" | "try_again" | "timeout";
+
 export interface ResultPacket {
   id: string;
   type: "result";
-  status: "success" | "failure" | "try_again";
+  status: ResultStatus;
 }
 
-interface OnTransitionEndHook {
+export interface OnTransitionEndHook {
   type: "OnTransitionEnd";
   sceneNum: number;
 }
 
-interface OnLoadGameHook {
+export interface OnLoadGameHook {
   type: "OnLoadGame";
   fileNum: number;
 }
 
-interface OnExitGameHook {
+export interface OnExitGameHook {
   type: "OnExitGame";
   fileNum: number;
 }
 
-interface OnItemReceiveHook {
+export interface OnItemReceiveHook {
   type: "OnItemReceive";
   tableId: number;
   getItemId: number;
 }
 
-interface OnEnemyDefeatHook {
+export interface OnEnemyDefeatHook {
   type: "OnEnemyDefeat";
   actorId: number;
   params: number;
 }
 
-interface OnActorInitHook {
+export interface OnActorInitHook {
   type: "OnActorInit";
   actorId: number;
   params: number;
 }
 
-interface OnFlagSetHook {
+export interface OnFlagSetHook {
   type: "OnFlagSet";
   flagType: number;
   flag: number;
 }
 
-interface OnFlagUnsetHook {
+export interface OnFlagUnsetHook {
   type: "OnFlagUnset";
   flagType: number;
   flag: number;
 }
 
-interface OnSceneFlagSetHook {
+export interface OnSceneFlagSetHook {
   type: "OnSceneFlagSet";
   flagType: number;
   flag: number;
   sceneNum: number;
 }
 
-interface OnSceneFlagUnsetHook {
+export interface OnSceneFlagUnsetHook {
   type: "OnSceneFlagUnset";
   flagType: number;
   flag: number;
   sceneNum: number;
 }
 
+export type Hook =
+  | OnTransitionEndHook
+  | OnLoadGameHook
+  | OnExitGameHook
+  | OnItemReceiveHook
+  | OnEnemyDefeatHook
+  | OnActorInitHook
+  | OnFlagSetHook
+  | OnFlagUnsetHook
+  | OnSceneFlagSetHook
+  | OnSceneFlagUnsetHook;
+
 export interface HookPacket {
   id: string;
   type: "hook";
-  hook:
-    | OnTransitionEndHook
-    | OnLoadGameHook
-    | OnExitGameHook
-    | OnItemReceiveHook
-    | OnEnemyDefeatHook
-    | OnActorInitHook
-    | OnFlagSetHook
-    | OnFlagUnsetHook
-    | OnSceneFlagSetHook
-    | OnSceneFlagUnsetHook;
+  hook: Hook;
 }
 
 export type IncomingPacket = ResultPacket | HookPacket;

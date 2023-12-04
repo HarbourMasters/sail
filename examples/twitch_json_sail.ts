@@ -3,8 +3,10 @@ import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/mod.ts";
 import { Effect, OutgoingPacket } from "../types.ts";
 import { Sail } from "../Sail.ts";
 import { TwitchClient } from "../TwitchClient.ts";
+import { SohClient } from "../SohClient.ts";
 
 let config: {
+  port?: number;
   channel: string;
   commands: {
     [index: string]: {
@@ -16,10 +18,9 @@ let config: {
   };
 };
 
-const sail = new Sail();
-const twitchClient = new TwitchClient();
 const tpl = new Template();
 const onCooldown: Record<string, boolean> = {};
+let sohClient: SohClient | undefined;
 
 const configString = await Deno.readTextFileSync("./config.json");
 if (!configString) {
@@ -31,6 +32,17 @@ try {
 } catch (_error) {
   throw new Error("Failed to parse config.json");
 }
+
+const sail = new Sail({ port: config.port || 43384, debug: true });
+const twitchClient = new TwitchClient({ channel: config.channel });
+
+sail.on("clientConnected", (client) => {
+  sohClient = client;
+
+  client.on("disconnected", () => {
+    sohClient = undefined;
+  });
+});
 
 twitchClient.on("raw", (event) => {
   let command: string;
@@ -70,11 +82,13 @@ twitchClient.on("raw", (event) => {
       argObject,
     );
 
-    sail.queuePackets(packets);
+    Promise.all(packets.map((packet) => sohClient?.sendPacket(packet)))
+      .then(() => {
+        setTimeout(() => {
+          endPackets.map((packet) => sohClient?.sendPacket(packet));
+        }, (commandConfig.lengthSeconds || 0) * 1000);
+      });
 
-    setTimeout(() => {
-      sail.queuePackets(endPackets);
-    }, (commandConfig.lengthSeconds || 0) * 1000);
     if (commandConfig.cooldownSeconds) {
       setTimeout(() => {
         onCooldown[command] = false;
@@ -117,8 +131,8 @@ function preparePackets(effects: Effect[], argObject: any): OutgoingPacket[] {
 
 (async () => {
   try {
-    await twitchClient.connect(config.channel);
-    await sail.lift();
+    await twitchClient.connect();
+    await sail.start();
   } catch (error) {
     console.error("There was an error starting the JSON Twitch Sail", error);
     Deno.exit(1);

@@ -1,41 +1,58 @@
 import { Sail } from "../Sail.ts";
+import { SohClient } from "../SohClient.ts";
 import { TwitchClient } from "../TwitchClient.ts";
 
-const sail = new Sail();
-const twitchClient = new TwitchClient();
+const sail = new Sail({ port: 43384, debug: true });
+const twitchClient = new TwitchClient({ channel: "proxysaw" });
+let sohClient: SohClient | undefined;
 
 twitchClient.on("chat", (message, user) => {
   if (message.match(/!kick (\d+)/)) {
-    if (onCooldown("kick", 300)) return;
+    if (onCooldown("kick", 1)) return;
     const strengthStr = message.match(/!kick (\d+)/)![1];
     const strength = Math.max(1, Math.min(3, parseInt(strengthStr)));
-    sail.knockbackPlayer(strength);
+    sohClient?.knockbackPlayer(strength);
   }
 
   if (message.match(/!rave/)) {
-    if (onCooldown("rave", 300)) return;
-    sail.command("set gCosmetics.Link_KokiriTunic.Changed 1");
-    sail.command("set gCosmetics.Link_KokiriTunic.Rainbow 1");
+    if (onCooldown("rave", 1)) return;
 
-    setTimeout(() => {
-      sail.command("set gCosmetics.Link_KokiriTunic.Changed 0");
-      sail.command("set gCosmetics.Link_KokiriTunic.Rainbow 0");
-    }, 1000 * 20);
+    Promise.all([
+      sohClient?.command("set gCosmetics.Link_KokiriTunic.Changed 1"),
+      sohClient?.command("set gCosmetics.Link_KokiriTunic.Rainbow 1"),
+    ]).then(() => {
+      setTimeout(() => {
+        sohClient?.command("set gCosmetics.Link_KokiriTunic.Changed 0");
+        sohClient?.command("set gCosmetics.Link_KokiriTunic.Rainbow 0");
+      }, 1000 * 20);
+    });
   }
 
   if (message.match(/!tiny/)) {
-    if (onCooldown("tiny", 300)) return;
-    sail.modifyLinkSize(2, 10);
+    if (onCooldown("tiny", 1)) return;
+    sohClient?.modifyLinkSize(2, 10);
   }
 });
 
 twitchClient.on("redeem", (reward, message, user) => {
   if (reward === "878f54ca-b3ec-4acd-acc1-c5482b5c2f8e") {
-    sail.command("reset");
+    sohClient?.command("reset");
   }
 });
 
 twitchClient.on("bits", (bits, message, user) => {
+});
+
+sail.on("clientConnected", (client) => {
+  sohClient = client;
+
+  client.on("transitionEnd", ({ sceneNum }) => {
+    console.log("OnTransitionEnd sceneNum:", sceneNum);
+  });
+
+  client.on("disconnected", () => {
+    sohClient = undefined;
+  });
 });
 
 const cooldownMap: Record<string, boolean> = {};
@@ -53,8 +70,8 @@ function onCooldown(command: string, cooldownSeconds: number) {
 
 (async () => {
   try {
-    await twitchClient.connect("proxysaw");
-    await sail.lift();
+    await twitchClient.connect();
+    await sail.start();
   } catch (error) {
     console.error("There was an error starting the Custom Sail", error);
     Deno.exit(1);

@@ -1,67 +1,51 @@
 import EventEmitter from "https://deno.land/x/eventemitter@1.2.4/mod.ts";
-import { TcpServer } from "./TcpServer.ts";
-import { OutgoingPacket } from "./types.ts";
-import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/nanoid.ts";
+import { SohClient } from "./SohClient.ts";
 
-export class Sail extends EventEmitter {
-  public server = new TcpServer();
+export class Sail extends EventEmitter<{
+  clientConnected: (client: SohClient) => void;
+}> {
+  private listener?: Deno.Listener;
+  public clients: SohClient[] = [];
+  public port = 43384;
+  public debug = false;
 
-  lift() {
-    this.server.start();
-    this.log(`Sail has been lifted!`);
+  constructor({ port, debug }: { port?: number; debug?: boolean } = {}) {
+    super();
+
+    if (port) {
+      this.port = port;
+    }
+    if (debug) {
+      this.debug = debug;
+    }
   }
 
-  queuePackets(packets: OutgoingPacket[] | OutgoingPacket) {
-    this.server.queuePackets(packets);
+  async start() {
+    try {
+      this.listener = Deno.listen({ port: this.port });
+
+      this.log(`Server listening on port ${this.port}`);
+      for await (const connection of this.listener) {
+        try {
+          const client = new SohClient(connection, this, { debug: this.debug });
+          this.clients.push(client);
+          this.emit("clientConnected", client);
+        } catch (error) {
+          this.log("Error connecting client:", error);
+        }
+      }
+    } catch (error) {
+      this.log("Error starting server:", error);
+    }
+  }
+
+  removeClient(client: SohClient) {
+    const index = this.clients.indexOf(client);
+    this.clients.splice(index, 1);
   }
 
   // deno-lint-ignore no-explicit-any
   log(...data: any[]) {
     console.log("[Sail]:", ...data);
-  }
-
-  /* Effect helpers */
-
-  command(command: string) {
-    this.queuePackets({
-      id: nanoid(),
-      type: "command",
-      command: command,
-    });
-  }
-
-  knockbackPlayer(strength: number) {
-    this.queuePackets({
-      id: nanoid(),
-      type: "effect",
-      effect: {
-        type: "apply",
-        name: "KnockbackPlayer",
-        parameters: [strength],
-      },
-    });
-  }
-
-  modifyLinkSize(size: number, lengthSeconds: number) {
-    this.queuePackets({
-      id: nanoid(),
-      type: "effect",
-      effect: {
-        type: "apply",
-        name: "ModifyLinkSize",
-        parameters: [size],
-      },
-    });
-
-    setTimeout(() => {
-      this.queuePackets({
-        id: nanoid(),
-        type: "effect",
-        effect: {
-          type: "remove",
-          name: "ModifyLinkSize",
-        },
-      });
-    }, 1000 * lengthSeconds);
   }
 }
