@@ -13,7 +13,7 @@ control the game via chat commands, redeemable channel points, and bits.
 
 ```sh
 cd <path to this repo>
-deno run --allow-net --allow-read json_sail.ts
+deno run --allow-net --allow-read twitch_json_sail.ts
 ```
 
 ## Sail Types

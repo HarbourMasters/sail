@@ -22,8 +22,15 @@ export interface EffectPacket {
   effect: Effect;
 }
 
+export interface CommandPacket {
+  id: string;
+  type: "command";
+  command: string;
+}
+
 export interface ResultPacket {
   id: string;
+  type: "result";
   status: "success" | "failure" | "try_again";
 }
 
@@ -102,4 +109,6 @@ export interface HookPacket {
     | OnSceneFlagUnsetHook;
 }
 
-export type Packet = EffectPacket | ResultPacket | HookPacket;
+export type IncomingPacket = ResultPacket | HookPacket;
+export type OutgoingPacket = EffectPacket | CommandPacket;
+export type Packet = IncomingPacket | OutgoingPacket;

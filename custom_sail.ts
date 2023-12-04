@@ -1,8 +1,10 @@
 import { Sail } from "./Sail.ts";
+import { TwitchClient } from "./TwitchClient.ts";
 
 const sail = new Sail();
+const twitchClient = new TwitchClient();
 
-sail.on("chat", (message, user) => {
+twitchClient.on("chat", (message, user) => {
   if (message.match(/!kick (\d+)/)) {
     if (onCooldown("kick", 1)) return;
     const strengthStr = message.match(/!kick (\d+)/)![1];
@@ -27,13 +29,13 @@ sail.on("chat", (message, user) => {
   }
 });
 
-sail.on("redeem", (reward, message, user) => {
+twitchClient.on("redeem", (reward, message, user) => {
   if (reward === "878f54ca-b3ec-4acd-acc1-c5482b5c2f8e") {
     sail.command("reset");
   }
 });
 
-sail.on("bits", (bits, message, user) => {
+twitchClient.on("bits", (bits, message, user) => {
 });
 
 const cooldownMap: Record<string, boolean> = {};
@@ -49,8 +51,12 @@ function onCooldown(command: string, cooldownSeconds: number) {
   return true;
 }
 
-sail.lift("proxysaw")
-  .catch((error) => {
-    console.error(error);
+(async () => {
+  try {
+    await twitchClient.connect("proxysaw");
+    await sail.lift();
+  } catch (error) {
+    console.error("There was an error starting the Custom Sail", error);
     Deno.exit(1);
-  });
+  }
+})();

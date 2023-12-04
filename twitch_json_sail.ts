@@ -2,6 +2,7 @@ import Template from "https://deno.land/x/template@v0.1.0/mod.ts";
 import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/mod.ts";
 import { Effect, Packet } from "./types.ts";
 import { Sail } from "./Sail.ts";
+import { TwitchClient } from "./TwitchClient.ts";
 
 let config: {
   channel: string;
@@ -16,6 +17,7 @@ let config: {
 };
 
 const sail = new Sail();
+const twitchClient = new TwitchClient();
 const tpl = new Template();
 const onCooldown: Record<string, boolean> = {};
 
@@ -30,7 +32,7 @@ try {
   throw new Error("Failed to parse config.json");
 }
 
-sail.on("raw", (event) => {
+twitchClient.on("raw", (event) => {
   let command: string;
   let args: string[];
   if (event.raw.tags?.customRewardId) {
@@ -113,8 +115,12 @@ function preparePackets(effects: Effect[], argObject: any): Packet[] {
   });
 }
 
-sail.lift(config.channel)
-  .catch((error) => {
-    console.error(error);
+(async () => {
+  try {
+    await twitchClient.connect(config.channel);
+    await sail.lift();
+  } catch (error) {
+    console.error("There was an error starting the JSON Twitch Sail", error);
     Deno.exit(1);
-  });
+  }
+})();
