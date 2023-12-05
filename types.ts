@@ -1,3 +1,47 @@
+export type EffectName =
+  | "SetSceneFlag"
+  | "UnsetSceneFlag"
+  | "SetFlag"
+  | "UnsetFlag"
+  | "ModifyHeartContainers"
+  | "FillMagic"
+  | "EmptyMagic"
+  | "ModifyRupees"
+  | "NoUI"
+  | "ModifyGravity"
+  | "ModifyHealth"
+  | "SetPlayerHealth"
+  | "FreezePlayer"
+  | "BurnPlayer"
+  | "ElectrocutePlayer"
+  | "KnockbackPlayer"
+  | "ModifyLinkSize"
+  | "InvisibleLink"
+  | "PacifistMode"
+  | "DisableZTargeting"
+  | "WeatherRainstorm"
+  | "ReverseControls"
+  | "ForceEquipBoots"
+  | "ModifyRunSpeedModifier"
+  | "OneHitKO"
+  | "ModifyDefenseModifier"
+  | "GiveOrTakeShield"
+  | "TeleportPlayer"
+  | "ClearAssignedButtons"
+  | "SetTimeOfDay"
+  | "SetCollisionViewer"
+  | "SetCosmeticsColor"
+  | "RandomizeCosmetics"
+  | "PressButton"
+  | "PressRandomButton"
+  | "AddOrTakeAmmo"
+  | "RandomBombFuseTimer"
+  | "DisableLedgeGrabs"
+  | "RandomWind"
+  | "RandomBonks"
+  | "PlayerInvincibility"
+  | "SlipperyFloor";
+
 export interface CommandEffect {
   type: "command";
   command: string;
@@ -5,13 +49,13 @@ export interface CommandEffect {
 
 export interface ApplyEffect {
   type: "apply";
-  name: string;
+  name: EffectName;
   parameters?: (number | string)[];
 }
 
 export interface RemoveEffect {
   type: "remove";
-  name: string;
+  name: EffectName;
 }
 
 export type Effect = CommandEffect | ApplyEffect | RemoveEffect;
