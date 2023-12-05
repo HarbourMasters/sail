@@ -1,7 +1,10 @@
 ## What is this?
 
-Sail is an integration between SoH and Twitch, that allows Twitch chat to
-control the game via chat commands, redeemable channel points, and bits.
+Sail is a networking protocol designed to facilitate remote control of the Ship
+of Harkinian client. It is intended to be utilized alongside a Sail server, for
+which we provide a few straightforward implementations here in this repo. The
+current implementations available allow integration with Twitch chat and SAMMI
+Bot, feel free to contribute your own!
 
 ## How to
 
@@ -12,14 +15,14 @@ control the game via chat commands, redeemable channel points, and bits.
 - Run either the custom or JSON sail, the differences are explained below
 
 ```sh
-cd <path to this repo>
+cd <path to this repo>/examples
 deno run --allow-net --allow-read twitch_json_sail.ts
 ```
 
 ## Sail Types
 
-Out of the box both types are configured with the same commands/rewards,
-primarily to show you an example of how to configure each type.
+Out of the box both of the twitch types are configured with the same
+commands/rewards, primarily to show you an example of how to configure them.
 
 ### Twitch JSON Sail
 
