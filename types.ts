@@ -72,6 +72,20 @@ export interface CommandPacket {
   command: string;
 }
 
+export interface SubscribePacket {
+  id: string;
+  type: "subscribe";
+  eventName: string;
+  eventIdFilter?: number;
+}
+
+export interface UnsubscribePacket {
+  id: string;
+  type: "unsubscribe";
+  eventName: string;
+  eventIdFilter?: number;
+}
+
 export type ResultStatus = "success" | "failure" | "try_again" | "timeout";
 
 export interface ResultPacket {
@@ -82,6 +96,11 @@ export interface ResultPacket {
 
 export interface OnTransitionEndHook {
   type: "OnTransitionEnd";
+  sceneNum: number;
+}
+
+export interface OnSceneInitHook {
+  type: "OnSceneInit";
   sceneNum: number;
 }
 
@@ -158,5 +177,5 @@ export interface HookPacket {
 }
 
 export type IncomingPacket = ResultPacket | HookPacket;
-export type OutgoingPacket = EffectPacket | CommandPacket;
+export type OutgoingPacket = EffectPacket | CommandPacket | SubscribePacket;
 export type Packet = IncomingPacket | OutgoingPacket;

@@ -10,7 +10,9 @@ Bot, feel free to contribute your own!
 
 - Download
   [the associated SoH Build](https://github.com/HarbourMasters/Shipwright/pull/3073)
-- Install [Deno](https://deno.land/manual@v1.34.3/getting_started/installation)
+- Install [Deno](https://deno.land/manual@v1.44.0/getting_started/installation)
+- THIS CURRENTLY ONLY WORKS WITH DENO VERSION 1.44.0, you can downgrade with
+  `deno upgrade --version 1.44.0`
 - Clone this repository
 - Run either the custom or JSON sail, the differences are explained below
 

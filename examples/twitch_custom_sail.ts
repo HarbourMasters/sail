@@ -1,3 +1,4 @@
+import { nanoid } from "https://deno.land/x/nanoid@v3.0.0/nanoid.ts";
 import { Sail } from "../Sail.ts";
 import { SohClient } from "../SohClient.ts";
 import { TwitchClient } from "../TwitchClient.ts";
@@ -46,8 +47,23 @@ twitchClient.on("bits", (bits, message, user) => {
 sail.on("clientConnected", (client) => {
   sohClient = client;
 
-  client.on("transitionEnd", ({ sceneNum }) => {
-    console.log("OnTransitionEnd sceneNum:", sceneNum);
+  client.sendPacket({
+    id: nanoid(),
+    type: "subscribe",
+    eventName: "OnSceneInit",
+  });
+
+  client.on("sceneInit", ({ sceneNum }) => {
+    console.log("sceneInit sceneNum:", sceneNum);
+    client.sendPacket({
+      id: nanoid(),
+      type: "effect",
+      effect: {
+        // @ts-ignore
+        type: "teleport",
+        entranceId: 54352,
+      },
+    });
   });
 
   client.on("disconnected", () => {

@@ -14,6 +14,7 @@ import {
   OnLoadGameHook,
   OnSceneFlagSetHook,
   OnSceneFlagUnsetHook,
+  OnSceneInitHook,
   OnTransitionEndHook,
   OutgoingPacket,
   ResultStatus,
@@ -23,6 +24,7 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 const hookToEventMap = {
+  OnSceneInit: "sceneInit",
   OnTransitionEnd: "transitionEnd",
   OnLoadGame: "loadGame",
   OnExitGame: "exitGame",
@@ -36,6 +38,7 @@ const hookToEventMap = {
 } as const;
 
 export class SohClient extends EventEmitter<{
+  sceneInit: (event: OnSceneInitHook) => void;
   transitionEnd: (event: OnTransitionEndHook) => void;
   loadGame: (event: OnLoadGameHook) => void;
   exitGame: (event: OnExitGameHook) => void;
