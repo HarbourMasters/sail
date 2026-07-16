@@ -16,26 +16,27 @@ but the same protocol could drive the game from anything. That protocol (below) 
 own `mm/2s2h/Network/Sail/Sail.cpp`, which is under active development — check that file before assuming a shape
 here is still current.
 
-## Running it
+## Downloads
+- [Linux](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-linux-amd64.tar.gz)
+- [MacOS](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-macos-universal.zip)
+- [Windows](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-windows-amd64.zip)
+
+## Development setup
 
 - Install [Go](https://go.dev) 1.25+ and [Node.js](https://nodejs.org).
 - Install the Wails CLI: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`.
 - `wails dev` for live development, or `wails build` for a release binary in `build/bin`.
 
-## Setting up Twitch login
+### Using your own Twitch application (optional)
 
-This app needs its own Twitch application (it doesn't ship with one). One-time setup:
+The built-in application is shared by everyone running Sail. To point at your own instead — for isolated rate
+limits, or if you're forking Sail — register one and override the default:
 
 1. Register an application at the [Twitch Developer Console](https://dev.twitch.tv/console/apps).
 2. Set **OAuth Redirect URL** to exactly `http://localhost:43385/callback`.
 3. Set **Client Type** to **Public**.
 4. Take the generated Client ID and either set it as the `SAIL_TWITCH_CLIENT_ID` environment variable (no
-   rebuild needed), or replace the placeholder in `internal/twitchapi/client_id.go` and rebuild.
-
-Login uses Twitch's implicit-grant OAuth flow (no client secret, which a distributed desktop app can't keep
-safe) and requests the `user:read:chat`, `user:write:chat`, and `channel:read:redemptions` scopes — enough to
-read your chat and redemptions and post messages back. The token is kept in the OS keychain, not the config
-file.
+   rebuild needed), or replace the value in `internal/twitchapi/client_id.go` and rebuild.
 
 ## Commands, redeems, and hooks
 
