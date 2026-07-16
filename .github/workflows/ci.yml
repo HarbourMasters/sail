@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test & build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # package main imports Wails, which links WebKitGTK via cgo on Linux, so
+      # even `go vet`/`go test` need these headers to compile the package.
+      - name: Install webview build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+
+      # main.go embeds frontend/dist via //go:embed, so the frontend must be
+      # built before anything Go compiles (this also type-checks the frontend).
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Check gofmt
+        run: |
+          unformatted=$(gofmt -l $(git ls-files '*.go'))
+          if [ -n "$unformatted" ]; then
+            echo "These files need 'gofmt -w':"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+  # Cross-platform build artifacts for every push. Wails apps can't be
+  # cross-compiled — each platform links its native webview (WebKit on macOS,
+  # WebView2 on Windows, WebKitGTK on Linux) — so every target builds on its own
+  # runner. Gated on `test` so we don't burn macOS/Windows minutes on broken code.
+  build:
+    name: Build ${{ matrix.name }}
+    needs: test
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (universal)
+            os: macos-latest
+            platform: darwin/universal
+            asset: Sail-macos-universal.zip
+          - name: Windows (amd64)
+            os: windows-latest
+            platform: windows/amd64
+            asset: Sail-windows-amd64.zip
+          - name: Linux (amd64)
+            os: ubuntu-22.04
+            platform: linux/amd64
+            asset: Sail-linux-amd64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # WebKitGTK + GTK dev headers for the Linux webview (cgo). 22.04 ships
+      # webkit2gtk-4.0; 24.04 dropped it, which is why this runner is pinned.
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+
+      - name: Add Go bin to PATH
+        shell: bash
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      # Regenerates the wailsjs bindings, builds the frontend, then compiles the
+      # Go binary with the frontend embedded.
+      - name: Build
+        run: wails build -platform ${{ matrix.platform }} -clean
+
+      - name: Package macOS app
+        if: runner.os == 'macOS'
+        run: |
+          APP=$(ls -d build/bin/*.app | head -n1)
+          ditto -c -k --keepParent "$APP" "${{ matrix.asset }}"
+
+      - name: Package Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path build/bin/*.exe -DestinationPath "${{ matrix.asset }}"
+
+      - name: Package Linux binary
+        if: runner.os == 'Linux'
+        run: tar -czf "${{ matrix.asset }}" -C build/bin sail
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+          retention-days: 14
