@@ -17,7 +17,7 @@ own `mm/2s2h/Network/Sail/Sail.cpp`, which is under active development — check
 here is still current.
 
 ## Downloads
-- [Linux](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-linux-amd64.tar.gz)
+- [Linux](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-linux-amd64.tar.gz.zip)
 - [MacOS](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-macos-universal.zip)
 - [Windows](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-windows-amd64.zip)
 

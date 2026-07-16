@@ -2,6 +2,7 @@ package twitchapi
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -52,6 +53,11 @@ type EventSubClient struct {
 	OnConnected   func()
 	OnError       func(error)
 
+	// webSocketURL and helixBaseURL override the Twitch endpoints for tests;
+	// empty means the real ones (see the cmp.Or calls at their use sites).
+	webSocketURL string
+	helixBaseURL string
+
 	cancel context.CancelFunc
 	done   chan struct{}
 }
@@ -98,11 +104,29 @@ func (e *EventSubClient) run(ctx context.Context) {
 }
 
 func (e *EventSubClient) runOnce(ctx context.Context, connected func()) error {
-	conn, _, err := websocket.DefaultDialer.DialContext(ctx, eventSubWebSocketURL, nil)
+	conn, _, err := websocket.DefaultDialer.DialContext(ctx, cmp.Or(e.webSocketURL, eventSubWebSocketURL), nil)
 	if err != nil {
 		return fmt.Errorf("dial eventsub websocket: %w", err)
 	}
 	defer conn.Close()
+
+	// gorilla/websocket reads don't observe context cancellation, so cancelling
+	// ctx alone won't unblock the ReadMessage loop below: Twitch's keepalives
+	// keep it returning without it ever checking ctx. Closing the connection is
+	// what interrupts an in-flight read, so watch ctx here and close on cancel.
+	// Without this, Stop() blocks on <-e.done forever and the app hangs on
+	// shutdown. stopWatch ends the watcher when runOnce returns so reconnects
+	// don't leak it. (Close may run concurrently with ReadMessage, which
+	// gorilla/websocket explicitly permits.)
+	stopWatch := make(chan struct{})
+	defer close(stopWatch)
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = conn.Close()
+		case <-stopWatch:
+		}
+	}()
 
 	sessionID, err := awaitWelcome(conn)
 	if err != nil {
@@ -217,7 +241,7 @@ func (e *EventSubClient) createSubscription(ctx context.Context, eventType strin
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, helixBase+"/eventsub/subscriptions", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cmp.Or(e.helixBaseURL, helixBase)+"/eventsub/subscriptions", bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
