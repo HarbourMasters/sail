@@ -29,11 +29,13 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       # package main imports Wails, which links WebKitGTK via cgo on Linux, so
-      # even `go vet`/`go test` need these headers to compile the package.
+      # even `go vet`/`go test` need these headers to compile the package. We
+      # link the 4.1 (libsoup3) API via the webkit2_41 build tag below — the 4.0
+      # API is EOL upstream and already gone from Arch, Fedora 40+, Ubuntu 24.04+.
       - name: Install webview build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
       # main.go embeds frontend/dist via //go:embed, so the frontend must be
       # built before anything Go compiles (this also type-checks the frontend).
@@ -53,10 +55,10 @@ jobs:
           fi
 
       - name: Vet
-        run: go vet ./...
+        run: go vet -tags webkit2_41 ./...
 
       - name: Test
-        run: go test ./...
+        run: go test -tags webkit2_41 ./...
 
   # Cross-platform build artifacts for every push. Wails apps can't be
   # cross-compiled — each platform links its native webview (WebKit on macOS,
@@ -74,15 +76,15 @@ jobs:
           - name: macOS (universal)
             os: macos-latest
             platform: darwin/universal
-            asset: Sail-macos-universal.zip
+            tagflag: ""
           - name: Windows (amd64)
             os: windows-latest
             platform: windows/amd64
-            asset: Sail-windows-amd64.zip
+            tagflag: ""
           - name: Linux (amd64)
             os: ubuntu-22.04
             platform: linux/amd64
-            asset: Sail-linux-amd64.tar.gz
+            tagflag: "-tags webkit2_41"
     steps:
       - uses: actions/checkout@v4
 
@@ -97,13 +99,15 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      # WebKitGTK + GTK dev headers for the Linux webview (cgo). 22.04 ships
-      # webkit2gtk-4.0; 24.04 dropped it, which is why this runner is pinned.
+      # WebKitGTK 4.1 (libsoup3) + GTK dev headers for the Linux webview (cgo).
+      # 22.04 keeps an old glibc (widest runtime compatibility) yet already ships
+      # the 4.1 dev package, so we build against the modern API that current
+      # distros actually have — selected by the webkit2_41 tag in matrix.tagflag.
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
@@ -113,28 +117,108 @@ jobs:
         run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       # Regenerates the wailsjs bindings, builds the frontend, then compiles the
-      # Go binary with the frontend embedded.
+      # Go binary with the frontend embedded. tagflag is empty except on Linux,
+      # where -tags webkit2_41 selects the WebKitGTK 4.1 API.
       - name: Build
-        run: wails build -platform ${{ matrix.platform }} -clean
+        run: wails build -platform ${{ matrix.platform }} -clean ${{ matrix.tagflag }}
+
+      # --- Packaging -------------------------------------------------------
+      # These produce raw, ready-to-run files. GitHub's artifact API re-zips
+      # everything on download, but end users fetch these from the nightly
+      # Release (below), whose assets GitHub serves byte-for-byte — so a user
+      # unpacks at most once (and the AppImage/.exe not at all).
 
       - name: Package macOS app
         if: runner.os == 'macOS'
         run: |
           APP=$(ls -d build/bin/*.app | head -n1)
-          ditto -c -k --keepParent "$APP" "${{ matrix.asset }}"
+          ditto -c -k --keepParent "$APP" "Sail-macos-universal.zip"
 
+      # A single portable .exe — no inner zip; the Release serves it directly.
       - name: Package Windows binary
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: Compress-Archive -Path build/bin/*.exe -DestinationPath "${{ matrix.asset }}"
+        shell: bash
+        run: cp build/bin/*.exe Sail-windows-amd64.exe
 
-      - name: Package Linux binary
+      # tar (not raw upload) preserves the executable bit for people who want the
+      # bare binary and bring their own webkit2gtk-4.1.
+      - name: Package Linux binary (tarball)
         if: runner.os == 'Linux'
-        run: tar -czf "${{ matrix.asset }}" -C build/bin sail
+        run: tar -czf Sail-linux-amd64.tar.gz -C build/bin sail
+
+      # A double-clickable AppImage — the easy path for Arch and other
+      # rolling-release users. It bundles the Sail binary (not WebKitGTK itself —
+      # bundling WebKit is notoriously brittle), so it still needs webkit2gtk-4.1
+      # + gtk3 on the host, which is exactly what current distros ship.
+      - name: Package Linux AppImage
+        if: runner.os == 'Linux'
+        run: |
+          APPDIR=Sail.AppDir
+          mkdir -p "$APPDIR/usr/bin"
+          cp build/bin/sail "$APPDIR/usr/bin/sail"
+          cp build/appicon.png "$APPDIR/sail.png"
+          ln -s sail.png "$APPDIR/.DirIcon"
+
+          printf '%s\n' \
+            '[Desktop Entry]' \
+            'Type=Application' \
+            'Name=Sail' \
+            'Comment=Crowd-control desktop app for 2 Ship 2 Harkinian' \
+            'Exec=sail' \
+            'Icon=sail' \
+            'Categories=Utility;' \
+            'Terminal=false' > "$APPDIR/sail.desktop"
+
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'HERE="$(dirname "$(readlink -f "$0")")"' \
+            'exec "$HERE/usr/bin/sail" "$@"' > "$APPDIR/AppRun"
+          chmod +x "$APPDIR/AppRun" "$APPDIR/usr/bin/sail"
+
+          curl -fsSL -o appimagetool \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          # The runner has no FUSE, so run appimagetool's own AppImage extracted.
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool "$APPDIR" Sail-x86_64.AppImage
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}
-          if-no-files-found: error
+          name: sail-${{ runner.os }}
+          path: |
+            Sail-macos-universal.zip
+            Sail-windows-amd64.exe
+            Sail-linux-amd64.tar.gz
+            Sail-x86_64.AppImage
+          if-no-files-found: ignore
           retention-days: 14
+
+  # Roll every platform build into one "nightly" pre-release. Release assets are
+  # served raw (no artifact re-zip), and the nightly tag is force-moved to the
+  # latest main commit each run, so the download URLs in the README stay stable.
+  # Runs only on pushes to main; PRs still get the per-job artifacts above.
+  release:
+    name: Publish nightly release
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish rolling nightly
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete nightly --cleanup-tag --yes || true
+          gh release create nightly \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Nightly" \
+            --notes "Automated build from ${GITHUB_SHA:0:7} ($(date -u +%Y-%m-%d)). Unsigned pre-release — expect rough edges." \
+            dist/*

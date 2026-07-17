@@ -17,9 +17,16 @@ own `mm/2s2h/Network/Sail/Sail.cpp`, which is under active development — check
 here is still current.
 
 ## Downloads
-- [Linux](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-linux-amd64.tar.gz.zip)
-- [MacOS](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-macos-universal.zip)
-- [Windows](https://nightly.link/HarbourMasters/sail/workflows/ci/main/Sail-windows-amd64.zip)
+
+Latest build from `main`, as unsigned pre-release assets on the [`nightly`](https://github.com/HarbourMasters/Sail/releases/tag/nightly) release:
+
+- **Linux** — [AppImage](https://github.com/HarbourMasters/Sail/releases/download/nightly/Sail-x86_64.AppImage) (recommended) or the [raw binary](https://github.com/HarbourMasters/Sail/releases/download/nightly/Sail-linux-amd64.tar.gz)
+- **macOS** — [universal `.app`](https://github.com/HarbourMasters/Sail/releases/download/nightly/Sail-macos-universal.zip)
+- **Windows** — [portable `.exe`](https://github.com/HarbourMasters/Sail/releases/download/nightly/Sail-windows-amd64.exe)
+
+The Linux builds link **WebKitGTK 4.1**, so the host needs `webkit2gtk-4.1` and `gtk3` installed — e.g. `sudo pacman -S webkit2gtk-4.1 gtk3` on Arch, or `sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0` on Debian/Ubuntu. The AppImage additionally needs FUSE to self-mount (`fuse2` on Arch); if it's missing, run it with `./Sail-x86_64.AppImage --appimage-extract-and-run`.
+
+Because the builds are unsigned, macOS quarantines the app (right-click → **Open**, or `xattr -dr com.apple.quarantine Sail.app`) and Windows SmartScreen will warn (**More info → Run anyway**).
 
 ## Development setup
 
